@@ -6,7 +6,6 @@ import sys
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry._logs import set_logger_provider
 from opentelemetry._events import set_event_logger_provider
@@ -15,13 +14,18 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.instrumentation.django import DjangoInstrumentor
 from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+#from opentelemetry.instrumentation.requests import RequestsInstrumentor
+#from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
+
+#HTTPXClientInstrumentor().instrument()
 from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter, AzureMonitorTraceExporter
 from events import MyEventLoggerProvider
 
 def configure_tracing() -> TracerProvider:
     provider = TracerProvider()
     provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
-    # provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+    #provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
     provider.add_span_processor(SimpleSpanProcessor(AzureMonitorTraceExporter()))
     trace.set_tracer_provider(provider)
     return provider
@@ -43,6 +47,8 @@ def main():
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chat.settings")
     DjangoInstrumentor().instrument()
     OpenAIInstrumentor().instrument()
+    #AioHttpClientInstrumentor().instrument()
+    #RequestsInstrumentor().instrument()
 
     try:
         from django.core.management import execute_from_command_line

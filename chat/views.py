@@ -3,10 +3,12 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-from chat.settings import OPENAI_CLIENT as openai
+from chat.evaluations import EvaluationQueue
+from chat.settings import MODEL, OPENAI_CLIENT as openai
 from chat.settings import EVENT_LOGGER as logger
 from opentelemetry.trace import get_current_span
 from opentelemetry._events import Event
+from chat.settings import EVALUATION_QUEUE as evaluation_queue
 
 def index(request):
     return render(request, 'index.html')
@@ -24,18 +26,22 @@ def chat(request):
 
 def _chat(prompt):
     completion = openai.chat.completions.create(
-        model="gpt-4o-mini",
+        model=MODEL,
         max_tokens=100,
         messages=[
-            {"role": "system", "content": "You are not helpful assistant. Add jokes and hallucinate."},
+            {"role": "system", "content": "You are not helpful assistant. Tell jokes and hallucinate."},
             {"role": "user", "content": prompt}
         ]
     )
 
+    current_ctx = get_current_span().get_span_context()
     metadata = {"response_id": completion.id,
-                "trace_id": get_current_span().get_span_context().trace_id,
-                "span_id": get_current_span().get_span_context().span_id}
+                "trace_id": current_ctx.trace_id,
+                "span_id": current_ctx.span_id,
+                "trace_flags": current_ctx.trace_flags}
     content = {"completion": completion.choices[0].message.content, "metadata": metadata}
+
+    evaluation_queue.evaluate(question=prompt, answer=completion.choices[0].message.content, context="no context", metadata=metadata)
 
     return content
 
@@ -67,8 +73,7 @@ def _record_feedback(feedback, response_id, trace_id, span_id):
     logger.emit(Event("gen_ai.evaluation.user_feedback",
                         span_id=span_id,
                         trace_id=trace_id,
-                        body={"score": score},
+                        body={"score": score, "details" : {}},
                         attributes={"gen_ai.response.id": response_id}))
 
     return (score, response_id)
-

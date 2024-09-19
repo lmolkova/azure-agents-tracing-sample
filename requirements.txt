@@ -8,5 +8,8 @@ opentelemetry-exporter-otlp-proto-grpc==1.27.0
 azure-monitor-opentelemetry-exporter==1.0.0b28
 opentelemetry-instrumentation==0.48b0
 opentelemetry-instrumentation-django==0.48b0
+opentelemetry-instrumentation-httpx==0.48b0
+azure-core-tracing-opentelemetry==1.0.0b1
+promptflow-evals==0.3.2
 # opentelemetry-instrumentation-openai==0.48b0 - install from https://github.com/lmolkova/opentelemetry-python-contrib/blob/openai-events/instrumentation/opentelemetry-instrumentation-opena
 

@@ -71,12 +71,23 @@ class EvaluationQueue:
             metadata = item["metadata"]
             eval = results["rows"][i]
 
-            self.logger.emit(Event("gen_ai.evaluation.relevance",
-                            trace_id=metadata["trace_id"],
-                            span_id=metadata["span_id"],
-                            trace_flags=metadata["trace_flags"],
-                            body={"score": eval["outputs.relevance.gpt_relevance"]},
-                            attributes={"gen_ai.response.id": metadata["response_id"]}))
-
+            if "outputs.relevance.gpt_relevance" in eval:
+                score = eval["outputs.relevance.gpt_relevance"]
+                self.logger.emit(Event("gen_ai.evaluation.relevance",
+                                trace_id=metadata["trace_id"],
+                                span_id=metadata["span_id"],
+                                trace_flags=metadata["trace_flags"],
+                                body=JsonBody({}),
+                                attributes={
+                                    "gen_ai.response.id": metadata["response_id"],
+                                    "gen_ai.evaluation.score": score,
+                                }))
         with self.lock:
             self.evaluation_in_progress = False
+
+class JsonBody:
+    def __init__(self, body):
+        self.body = body
+
+    def __str__(self) -> str:
+        return json.dumps(self.body)

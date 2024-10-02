@@ -3,6 +3,9 @@
 import os
 import sys
 
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+HTTPXClientInstrumentor().instrument()
+
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
@@ -14,11 +17,9 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.instrumentation.django import DjangoInstrumentor
 from opentelemetry.instrumentation.openai import OpenAIInstrumentor
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 #from opentelemetry.instrumentation.requests import RequestsInstrumentor
 #from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 
-#HTTPXClientInstrumentor().instrument()
 from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter, AzureMonitorTraceExporter
 from events import MyEventLoggerProvider
 

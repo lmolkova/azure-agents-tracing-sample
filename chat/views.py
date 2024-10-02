@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-from chat.evaluations import EvaluationQueue
+from chat.evaluations import JsonBody
 from chat.settings import MODEL, OPENAI_CLIENT as openai
 from chat.settings import EVENT_LOGGER as logger
 from opentelemetry.trace import get_current_span
@@ -66,14 +66,15 @@ def feedback(request):
 def _record_feedback(feedback, response_id, trace_id, span_id):
     score = None
     if (feedback == '+1'):
-        score = 1
+        score = 1.0
     elif (feedback == '-1'):
-        score = -1
+        score = -1.0
 
     logger.emit(Event("gen_ai.evaluation.user_feedback",
                         span_id=span_id,
                         trace_id=trace_id,
-                        body={"score": score, "details" : {}},
-                        attributes={"gen_ai.response.id": response_id}))
+                        body=JsonBody({"comment": "something users might provide"}),
+                        attributes={"gen_ai.response.id": response_id,
+                                    "gen_ai.evaluation.score": score}))
 
     return (score, response_id)

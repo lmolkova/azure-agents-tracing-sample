@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from opentelemetry._events import get_event_logger
 from promptflow.core import AzureOpenAIModelConfiguration
-from promptflow.evals.evaluate import evaluate
+#from promptflow.evals.evaluate import evaluate
 from promptflow.evals.evaluators import RelevanceEvaluator
 from openai import AzureOpenAI
 import signal
@@ -72,9 +72,9 @@ _evaluator = RelevanceEvaluator(model_config=AzureOpenAIModelConfiguration(
 ))
 EVENT_LOGGER = get_event_logger("chat", version="1.0.0")
 
-EVALUATION_QUEUE = EvaluationQueue(_evaluator, EVENT_LOGGER)
+#EVALUATION_QUEUE = EvaluationQueue(_evaluator, EVENT_LOGGER)
 
-def quit(*args):
-    EVALUATION_QUEUE.stop()
+#def quit(*args):
+#    EVALUATION_QUEUE.stop()
 
-signal.signal(signal.SIGINT, quit)
+#signal.signal(signal.SIGINT, quit)

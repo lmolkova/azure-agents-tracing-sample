@@ -8,7 +8,7 @@ from chat.settings import MODEL, OPENAI_CLIENT as openai
 from chat.settings import EVENT_LOGGER as logger
 from opentelemetry.trace import get_current_span
 from opentelemetry._events import Event
-from chat.settings import EVALUATION_QUEUE as evaluation_queue
+#from chat.settings import EVALUATION_QUEUE as evaluation_queue
 
 def index(request):
     return render(request, 'index.html')
@@ -29,10 +29,23 @@ def _chat(prompt):
         model=MODEL,
         max_tokens=100,
         messages=[
-            {"role": "system", "content": "You are not helpful assistant. Tell jokes and hallucinate."},
-            {"role": "user", "content": prompt}
-        ]
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": prompt},
+        ],
+        tool_choice="auto",
+        tools=[get_current_weather_tool_definition()],
     )
+
+    if (completion.choices[0].finish_reason == "tool_calls"):
+        messages = [{"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": prompt},
+            {"role": "assistant", "tool_calls": completion.choices[0].message.to_dict()["tool_calls"]},
+            {"role": "tool", "content": "50 degrees and raining", "tool_call_id": completion.choices[0].message.tool_calls[0].id}]
+        completion = openai.chat.completions.create(
+                model=MODEL,
+                max_tokens=100,
+                messages=messages
+            )
 
     current_ctx = get_current_span().get_span_context()
     metadata = {"response_id": completion.id,
@@ -41,7 +54,7 @@ def _chat(prompt):
                 "trace_flags": current_ctx.trace_flags}
     content = {"completion": completion.choices[0].message.content, "metadata": metadata}
 
-    evaluation_queue.evaluate(question=prompt, answer=completion.choices[0].message.content, context="no context", metadata=metadata)
+    #evaluation_queue.evaluate(question=prompt, answer=completion.choices[0].message.content, context="no context", metadata=metadata)
 
     return content
 
@@ -78,3 +91,25 @@ def _record_feedback(feedback, response_id, trace_id, span_id):
                                     "gen_ai.evaluation.score": score}))
 
     return (score, response_id)
+
+
+
+def get_current_weather_tool_definition():
+    return {
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. Boston, MA",
+                    },
+                },
+                "required": ["location"],
+                "additionalProperties": False,
+            },
+        },
+    }

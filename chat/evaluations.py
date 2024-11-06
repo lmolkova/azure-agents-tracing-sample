@@ -77,22 +77,10 @@ class EvaluationQueue:
                                 trace_id=metadata["trace_id"],
                                 span_id=metadata["span_id"],
                                 trace_flags=metadata["trace_flags"],
-                                body=JsonBody({}),
+                                body={"reason": "additional evaluation context"},
                                 attributes={
                                     "gen_ai.response.id": metadata["response_id"],
                                     "gen_ai.evaluation.score": score,
                                 }))
         with self.lock:
             self.evaluation_in_progress = False
-
-class JsonBody(dict):
-    def __init__(self, obj=None, **kwargs):
-        if obj is None:
-            obj = {}
-        super().__init__(obj, **kwargs)
-
-    def to_json(self):
-        return json.dumps(self)
-
-    def __str__(self):
-        return self.to_json()

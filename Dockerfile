@@ -7,12 +7,4 @@ COPY . /app
 
 RUN pip install -r requirements.txt
 
-RUN git clone https://github.com/open-telemetry/opentelemetry-python-contrib opentelemetry-python-contrib
-
-WORKDIR /app/opentelemetry-python-contrib
-RUN git checkout main
-RUN pip install /app/opentelemetry-python-contrib/instrumentation-genai/opentelemetry-instrumentation-openai-v2
-
-WORKDIR /app
-
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

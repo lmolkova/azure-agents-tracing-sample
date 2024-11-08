@@ -24,7 +24,7 @@ from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter, AzureM
 def configure_tracing() -> TracerProvider:
     provider = TracerProvider()
     provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
-    provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+    #provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
     provider.add_span_processor(SimpleSpanProcessor(AzureMonitorTraceExporter()))
     set_tracer_provider(provider)
     return provider
@@ -33,7 +33,7 @@ def configure_tracing() -> TracerProvider:
 def configure_logging():
     provider = LoggerProvider()
     provider.add_log_record_processor(SimpleLogRecordProcessor(OTLPLogExporter()))
-    provider.add_log_record_processor(SimpleLogRecordProcessor(ConsoleLogExporter()))
+    #provider.add_log_record_processor(SimpleLogRecordProcessor(ConsoleLogExporter()))
     provider.add_log_record_processor(SimpleLogRecordProcessor(AzureMonitorLogExporter()))
     set_logger_provider(provider)
 

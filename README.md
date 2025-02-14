@@ -1,36 +1,22 @@
-# Evaluation events sample
+# Client-side Azure Agents example
 
 Prerequisites:
 
-- Docker
-- Azure OpenAI resource
-- Application Insights resource
+- Azure Foundry project
+  - It should be connected to OpenAI deployment. `gpt-4o` model is used by default
+- Application Insights resource (connected to the project)
 
 How to run:
 
-1. Set `AZURE_OPENAT_API_KEY`, `AZURE_OPENAI_ENDPOINT`, and `APPLICATIONINSIGHTS_CONNECTION_STRING`
-2. run with `docker-compose up`
-3. open http://localhost:8085
-4. add prompt and submit
-5. optionally provide feedback
-6. You can check generated telemetry in Application Insights resource or locally via Aspire dashboard (http://localhost:18888) included in docker-compose.
-   Relevance evaluator runs every 10 seconds on all model answers, you can find corresponding event in the telemetry.
-
-API access:
-
-1. Set `AZURE_OPENAT_API_KEY`, `AZURE_OPENAI_ENDPOINT` and `APPLICATIONINSIGHTS_CONNECTION_STRING`,
-2. run with `docker-compose up`
-3. `curl http://localhost:8085/chat?prompt=tell%20me%20a%20joke` to get completion and metadata. It'd return something like
-
-   ```json
-    {
-      "completion": "Why did the scarecrow win an award? \n\nBecause he was outstanding in his field! \n\nAnd you know, he really knew how to raise the stakes – just ask the corn! 🌽😄",
-      "metadata": {
-        "response_id": "chatcmpl-A1jhMgJEH87R40j5xrhIiZIwc1VFY",
-        "trace_id": 308553532712409009926940644798237390457,
-        "span_id": 2824187595407880700
-      }
-    }
-   ```
-
-4. `curl http://localhost:8085/feedback?feedback=-1&trace_id=308553532712409009926940644798237390457&span_id=2824187595407880639&response_id=chatcmpl-A1jhMgJEH87R40j5xrhIiZIwc1VFY` to send feedback.
+0. Install dependencies with `python -m pip install requirements.txt`
+1. Set environment variables:
+   - `PROJECT_CONNECTION_STRING` for your project,
+   - `OTEL_SERVICE_NAME` to `agent-client` or any other service name you like
+   - `AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED` to `true`.
+   - If you want to use another model (not `gpt-4o`), set `MODEL`
+2. run with `python manage.py runserver 0.0.0.0:8000`
+3. open http://localhost:8000
+4. pick one of the examples
+5. add prompt and submit
+6. optionally provide feedback
+7. You can check generated telemetry in Azure Foundry UI or in Application Insights resource

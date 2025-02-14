@@ -1,63 +1,82 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+
 import os
 import sys
 
+from dotenv import load_dotenv
+load_dotenv()
+
+from chat.settings import AZMON_CONNECTION_STRING, PROJECT_CLIENT
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 HTTPXClientInstrumentor().instrument()
 
+from azure.core.settings import settings
+settings.tracing_implementation = "opentelemetry"
+
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
-from opentelemetry.metrics import get_meter_provider
-from opentelemetry.trace import get_tracer_provider
-from opentelemetry._logs import get_logger_provider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.metrics import set_meter_provider
+from opentelemetry.trace import get_tracer_provider, set_tracer_provider
+from opentelemetry._logs import get_logger_provider, set_logger_provider
 from opentelemetry._events import set_event_logger_provider
+from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._events import EventLoggerProvider
-from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor, ConsoleLogExporter
+from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.instrumentation.django import DjangoInstrumentor
 from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader, ConsoleMetricExporter
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics import MeterProvider
-from azure.monitor.opentelemetry import configure_azure_monitor
+from opentelemetry.sdk.metrics.view import View, ExplicitBucketHistogramAggregation
+from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter, AzureMonitorMetricExporter, AzureMonitorTraceExporter
 
 def configure_tracing() -> TracerProvider:
+    set_tracer_provider(TracerProvider())
     provider = get_tracer_provider()
 
-    provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
-    provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+    #provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+    provider.add_span_processor(SimpleSpanProcessor(AzureMonitorTraceExporter(connection_string=AZMON_CONNECTION_STRING)))
     return provider
 
 
 def configure_logging():
+    set_logger_provider(LoggerProvider())
     provider = get_logger_provider()
-    provider.add_log_record_processor(SimpleLogRecordProcessor(OTLPLogExporter()))
-    provider.add_log_record_processor(SimpleLogRecordProcessor(ConsoleLogExporter()))
+    #provider.add_log_record_processor(SimpleLogRecordProcessor(OTLPLogExporter()))
+    provider.add_log_record_processor(SimpleLogRecordProcessor(AzureMonitorLogExporter(connection_string=AZMON_CONNECTION_STRING)))
     event_provider = EventLoggerProvider()
     set_event_logger_provider(event_provider)
     return (provider, event_provider)
 
 def configure_metrics() -> MeterProvider:
-    provider = get_meter_provider()
-    #provider.
-
-    #MeterProvider(metric_readers=[PeriodicExportingMetricReader(OTLPMetricExporter())])
-    #metrics.set_meter_provider(provider)
+    views = [
+        View(
+            instrument_name="gen_ai.client.token.usage",
+            aggregation=ExplicitBucketHistogramAggregation([1, 4, 16, 64, 256, 1024, 4096, 16384, 65536, 262144, 1048576, 4194304, 16777216, 67108864]),
+        ),
+        View(
+            instrument_name="gen_ai.client.operation.duration",
+            aggregation=ExplicitBucketHistogramAggregation([0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.56, 5.12, 10.24, 20.48, 40.96, 81.92]),
+        ),
+    ]
+    provider = MeterProvider(metric_readers=[
+        #PeriodicExportingMetricReader(OTLPMetricExporter()),
+        PeriodicExportingMetricReader(AzureMonitorMetricExporter(connection_string=AZMON_CONNECTION_STRING))
+        ],
+        views=views)
+    set_meter_provider(provider)
     return provider
 
 def main():
-    configure_azure_monitor()
     configure_tracing()
     configure_logging()
     configure_metrics()
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chat.settings")
     DjangoInstrumentor().instrument()
     OpenAIInstrumentor().instrument()
-    #AioHttpClientInstrumentor().instrument()
-    #RequestsInstrumentor().instrument()
-
+    PROJECT_CLIENT.telemetry.enable()
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

@@ -1,32 +1,30 @@
-<!DOCTYPE html>
 <html>
 <body>
     {% if completion %}
-        <p><strong>Prompt:</strong> {{ prompt }}</p>
-        <p><strong>Completion:</strong> {{ completion }}</p>
+        <p><strong>Query:</strong> {{ query }}</p>
+        <p><strong>Completion:</strong></p>
+        <div>{{ completion }}</div>
         <p/>
-        <p/>
-        <p/>
-        <p><small>response_id {{ metadata.response_id }}</small></p>
-        <p><small>trace_id {{ metadata.trace_id }}</small></p>
+        <p><small>thread_id {{ thread_id }}</small></p>
     {% endif %}
 
-    <form id="textForm" method="POST" action="/feedback_page">
-        {% csrf_token %}
-        <input type="hidden" name="response_id" value="{{ metadata.response_id }}">
-        <input type="hidden" name="trace_id" value="{{ metadata.trace_id }}">
-        <input type="hidden" name="span_id" value="{{ metadata.span_id }}">
-        <input type="hidden" name="feedback" value="+1"><br><br>
-        <input type="submit" value="Like">
-    </form>
 
     <form id="textForm" method="POST" action="/feedback_page">
         {% csrf_token %}
         <input type="hidden" name="response_id" value="{{ metadata.response_id }}">
         <input type="hidden" name="trace_id" value="{{ metadata.trace_id }}">
         <input type="hidden" name="span_id" value="{{ metadata.span_id }}">
-        <input type="hidden" name="feedback" value="-1"><br><br>
+        <input type="hidden" name="feedback" value="+1"><br>
+        <input type="submit" value="Like">
+    </form>
+    <form id="textForm" method="POST" action="/feedback_page">
+        {% csrf_token %}
+        <input type="hidden" name="response_id" value="{{ metadata.response_id }}">
+        <input type="hidden" name="trace_id" value="{{ metadata.trace_id }}">
+        <input type="hidden" name="span_id" value="{{ metadata.span_id }}">
+        <input type="hidden" name="feedback" value="-1"><br>
         <input type="submit" value="Don't Like">
     </form>
+
 </body>
 </html>

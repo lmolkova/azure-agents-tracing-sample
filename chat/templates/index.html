@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html>
 <body>
-    <form id="textForm" method="POST" action="/chat_page">
-        {% csrf_token %}
-        <label for="prompt">Prompt:</label><br>
-        <input type="text" id="prompt" name="prompt" required><br><br>
-        <input type="submit" value="Submit">
-    </form>
+    <h2>Examples</h2>
+
+    <p>
+        <a href="code_agent">Code Agent Example</a> - Agent that writes code.
+    </p>
+
+    <p>
+        <a href="file_search_agent">File Search Example</a> - Agent that finds hotels.
+    </p>
 </body>
 </html>

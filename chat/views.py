@@ -1,10 +1,11 @@
+import json
 from typing import Any
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 from chat.settings import EVENT_LOGGER as logger, PROJECT_CLIENT as project, AGENT_IDS
-from chat.create_agents import CODE_TOOLSET, SEARCH_TOOLSET, create_code_agent, create_file_search_agent
+from chat.create_agents import CODE_TOOLSET, FILE_SEARCH_TOOLSET, create_ai_search_agent, create_code_agent, create_file_search_agent
 from opentelemetry.trace import get_current_span
 from opentelemetry._events import Event
 from opentelemetry.trace import get_tracer
@@ -27,6 +28,8 @@ def code_agent(request):
 def file_search_agent(request):
     return render(request, 'file_search_agent.html')
 
+def ai_search_agent(request):
+    return render(request, 'ai_search_agent.html')
 
 class MyEventHandler(AgentEventHandler):
     def __init__(self) -> None:
@@ -77,8 +80,20 @@ def get_or_create_agent(name: str):
             agent = create_file_search_agent()
             AGENT_IDS[name] = agent.id
             return agent.id
+        elif name == "ai-search-agent":
+            agent = create_ai_search_agent()
+            AGENT_IDS[name] = agent.id
+            return agent.id
 
     raise ValueError(f"Unknown agent name: {name}")
+
+def get_toolset(name: str):
+    if name == "code-agent":
+        return CODE_TOOLSET
+    elif name == "file-search-agent":
+        return FILE_SEARCH_TOOLSET
+
+    return None
 
 @csrf_exempt
 def results_page(request):
@@ -86,10 +101,7 @@ def results_page(request):
     thread_id = request.POST.get('thread-id', None)
     agent_name = request.POST.get('agent-name', None)
     agent_id = get_or_create_agent(agent_name)
-
-    toolset = CODE_TOOLSET if agent_name == "code-agent" else SEARCH_TOOLSET
-
-    response = run_agent(query, thread_id, agent_id, toolset)
+    response = run_agent(query, thread_id, agent_id, get_toolset(agent_name))
 
     return render(request, 'results_page.html', response)
 

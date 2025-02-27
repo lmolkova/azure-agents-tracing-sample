@@ -71,4 +71,5 @@ EVENT_LOGGER = get_event_logger("chat", version="1.0.0")
 AGENT_IDS = {
     "code-agent": None,
     "file-search-agent": None,
+    "ai-search-agent": None,
 }

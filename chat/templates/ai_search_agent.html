@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <form id="textForm" method="POST" action="/ai_search_agent_page">
+        {% csrf_token %}
+        <label for="query">Search hotels:</label><br>
+        <textarea name="query" id="query" rows="20" cols="80"></textarea><br>
+
+        <label for="thread-id">Thread ID:</label><br>
+        <input type="text" id="thread-id" name="thread-id"><br>
+        <input type="hidden" name="agent-name" id="agent-name" value="ai-search-agent"><br>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

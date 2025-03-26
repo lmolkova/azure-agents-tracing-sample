@@ -28,8 +28,7 @@ def create_code_agent():
         model=MODEL,
         name="code-agent",
         instructions="You are a friendly assistant that helps users write and execute code.",
-        tools=CODE_TOOLSET.definitions,
-        tool_resources=CODE_TOOLSET.resources,
+        toolset=CODE_TOOLSET,
         headers={"x-ms-enable-preview": "true"},
     )
 
@@ -64,7 +63,7 @@ def create_ai_search_agent():
             search_connection = conn
             break
 
-    ai_search = AzureAISearchTool(index_connection_id=search_connection.id, index_name="hotels-vector2")
+    ai_search = AzureAISearchTool(index_connection_id=search_connection.id, index_name="hotels-vector3")
 
     agent = PROJECT_CLIENT.agents.create_agent(
         model=MODEL,

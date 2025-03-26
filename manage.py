@@ -22,12 +22,17 @@ from opentelemetry._events import set_event_logger_provider
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._events import EventLoggerProvider
 from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
+from opentelemetry.sdk._logs.export import ConsoleLogExporter
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+#from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+#from opentelemetry.exporter.otlp.proto.http.log_exporter import OTLPLogExporter
 from opentelemetry.instrumentation.django import DjangoInstrumentor
 from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+#from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.view import View, ExplicitBucketHistogramAggregation
 from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter, AzureMonitorMetricExporter, AzureMonitorTraceExporter
@@ -36,7 +41,8 @@ def configure_tracing() -> TracerProvider:
     set_tracer_provider(TracerProvider())
     provider = get_tracer_provider()
 
-    #provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+    # provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+    # provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
     provider.add_span_processor(SimpleSpanProcessor(AzureMonitorTraceExporter(connection_string=AZMON_CONNECTION_STRING)))
     return provider
 
@@ -44,7 +50,8 @@ def configure_tracing() -> TracerProvider:
 def configure_logging():
     set_logger_provider(LoggerProvider())
     provider = get_logger_provider()
-    #provider.add_log_record_processor(SimpleLogRecordProcessor(OTLPLogExporter()))
+    # provider.add_log_record_processor(SimpleLogRecordProcessor(ConsoleLogExporter()))
+    # provider.add_log_record_processor(SimpleLogRecordProcessor(OTLPLogExporter()))
     provider.add_log_record_processor(SimpleLogRecordProcessor(AzureMonitorLogExporter(connection_string=AZMON_CONNECTION_STRING)))
     event_provider = EventLoggerProvider()
     set_event_logger_provider(event_provider)
@@ -62,7 +69,7 @@ def configure_metrics() -> MeterProvider:
         ),
     ]
     provider = MeterProvider(metric_readers=[
-        #PeriodicExportingMetricReader(OTLPMetricExporter()),
+        # PeriodicExportingMetricReader(OTLPMetricExporter()),
         PeriodicExportingMetricReader(AzureMonitorMetricExporter(connection_string=AZMON_CONNECTION_STRING))
         ],
         views=views)

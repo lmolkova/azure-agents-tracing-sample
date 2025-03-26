@@ -44,10 +44,11 @@ class MyEventHandler(AgentEventHandler):
             self.last_message = message
 
     def on_thread_run(self, run: "ThreadRun") -> None:
-        if run.last_error:
-            print(f"ThreadRun status: {run.status} {run.last_error}")
+        #if run.last_error:
+        print(f"ThreadRun status: {run.status} {run.last_error}]")
 
     def on_run_step(self, step: "RunStep") -> None:
+        print(f"RunStep: {step}")
         pass
 
     def on_error(self, data: str) -> None:
@@ -116,7 +117,7 @@ def run_agent(query, thread_id, agent_id, toolset):
     )
 
     event_handler=MyEventHandler()
-    with project.agents.create_stream(thread_id=thread_id, assistant_id=agent_id, event_handler=event_handler) as stream:
+    with project.agents.create_stream(thread_id=thread_id, agent_id=agent_id, event_handler=event_handler) as stream:
         stream.until_done()
 
     if event_handler.last_message:
@@ -136,7 +137,7 @@ def run_agent(query, thread_id, agent_id, toolset):
     }
     response["query"] = query
     response["thread_id"] = thread_id
-    response["completion"] = content.text.value
+    response["completion"] = content
 
     return response
 
